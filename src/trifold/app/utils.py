@@ -3,6 +3,9 @@ from __future__ import annotations
 from typing import Any, Callable, Generic, TypeVar
 import time
 
+from fastapi import FastAPI
+from fastapi.openapi.utils import get_openapi
+
 T = TypeVar("T")
 
 
@@ -38,3 +41,22 @@ class TimedCachedProperty(Generic[T]):
 
     def __set_name__(self, owner: Any, name: str) -> None:
         self.name = name
+
+def custom_openapi(app: FastAPI):
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+
+    # Prefix all paths with /api
+    prefixed_paths = {}
+    for path in openapi_schema["paths"]:
+        prefixed_paths["/api" + path] = openapi_schema["paths"][path]
+    openapi_schema["paths"] = prefixed_paths
+
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema

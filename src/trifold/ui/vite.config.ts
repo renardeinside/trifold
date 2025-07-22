@@ -25,7 +25,6 @@ export default defineConfig({
   },
   build: {
     emptyOutDir: true,
-    outDir: path.resolve('../src/bmw_cdh_dbx_poc/app/static'),
     rollupOptions: {
       output: {
         manualChunks: (id) => {

@@ -1,29 +1,83 @@
-from contextlib import asynccontextmanager
+from functools import partial
+from fastapi.responses import JSONResponse
+from sqlmodel import Session, select
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service import iam
+from fastapi import Depends, FastAPI
+from trifold import __version__
+from trifold.app.config import rt
+from trifold.app.dependencies import get_user_workspace_client
+from trifold.app.models import (
+    Dessert,
+    DessertIn,
+    DessertOut,
+    ProfileView,
+    VersionView,
+    get_cached_version,
+)
+from trifold.app.utils import custom_openapi
 
-from fastapi import FastAPI
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
-
-from trifold.app.api import app as api_app
-from trifold.app.config import app_conf
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):  # noqa: ARG001
-    yield
+app = FastAPI(
+    title="Trifold | Full stack data application on Databricks",
+    description="Trifold is a full stack data application on Databricks",
+    version=__version__,
+)
 
 
-app = FastAPI(title="Trifold", lifespan=lifespan)
-
-ui_app = StaticFiles(directory=app_conf.static_assets_path, html=True)
-
-
-# note the order of mounts!
-
-app.mount("/api", api_app)
-app.mount("/", ui_app)
+@app.get("/version", response_model=VersionView, operation_id="Version")
+async def version():
+    return get_cached_version()
 
 
-@app.exception_handler(404)
-async def client_side_routing(_, __):
-    return FileResponse(app_conf.static_assets_path / "index.html")
+@app.get("/profile", response_model=ProfileView, operation_id="Profile")
+async def profile(ws: WorkspaceClient = Depends(get_user_workspace_client)):
+    return ProfileView.from_ws(ws)
+
+
+@app.get("/desserts", response_model=list[DessertOut], operation_id="Desserts")
+async def desserts():
+    with rt.session as session:
+        return [DessertOut.from_model(d) for d in session.exec(select(Dessert)).all()]
+
+
+@app.post("/desserts", response_model=DessertOut, operation_id="CreateDessert")
+async def create_dessert(dessert: DessertIn):
+    with rt.session as session:
+        model = Dessert(**dessert.model_dump())
+        session.add(model)
+        session.commit()
+        return DessertOut.from_model(model)
+
+
+@app.put(
+    "/desserts/{dessert_id}", response_model=DessertOut, operation_id="UpdateDessert"
+)
+async def update_dessert(dessert_id: int, dessert: DessertIn):
+    with rt.session as session:
+        model = session.get(Dessert, dessert_id)
+        if not model:
+            return JSONResponse(
+                status_code=404, content={"detail": "Dessert not found"}
+            )
+        model.name = dessert.name
+        model.price = dessert.price
+        model.description = dessert.description
+        model.left_in_stock = dessert.left_in_stock
+        session.commit()
+        return DessertOut.from_model(model)
+
+
+@app.delete("/desserts/{dessert_id}", response_model=None, operation_id="DeleteDessert")
+async def delete_dessert(dessert_id: int):
+    with rt.session as session:
+        model = session.get(Dessert, dessert_id)
+        if not model:
+            return JSONResponse(
+                status_code=404, content={"detail": "Dessert not found"}
+            )
+        session.delete(model)
+        session.commit()
+        return JSONResponse(status_code=204, content={"detail": "Dessert deleted"})
+
+
+app.openapi = partial(custom_openapi, app)

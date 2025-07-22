@@ -1,0 +1,27 @@
+bundle:
+  name: trifold
+
+sync:
+  include:
+    - .build
+
+artifacts:
+  default:
+    type: whl
+    path: .
+    build: uv build --wheel
+
+
+resources:
+  apps:
+    trifold:
+      name: "trifold"
+      description: "Full stack data application on Databricks"
+      source_code_path: ./.build
+      config:
+        command: ["uvicorn", "trifold.app.app:app", "--workers", "2"]
+
+targets:
+  dev:
+    mode: development
+    default: true
