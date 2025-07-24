@@ -8,98 +8,98 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as AppRouteRouteImport } from "./routes/app/route";
-import { Route as IndexRouteImport } from "./routes/index";
-import { Route as AppTableEditorRouteImport } from "./routes/app/table-editor";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as AppRouteRouteImport } from './routes/app/route'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppTableEditorRouteImport } from './routes/app/table-editor'
 
 const AppRouteRoute = AppRouteRouteImport.update({
-  id: "/app",
-  path: "/app",
+  id: '/app',
+  path: '/app',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AppTableEditorRoute = AppTableEditorRouteImport.update({
-  id: "/table-editor",
-  path: "/table-editor",
+  id: '/table-editor',
+  path: '/table-editor',
   getParentRoute: () => AppRouteRoute,
-} as any);
+} as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/app": typeof AppRouteRouteWithChildren;
-  "/app/table-editor": typeof AppTableEditorRoute;
+  '/': typeof IndexRoute
+  '/app': typeof AppRouteRouteWithChildren
+  '/app/table-editor': typeof AppTableEditorRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/app": typeof AppRouteRouteWithChildren;
-  "/app/table-editor": typeof AppTableEditorRoute;
+  '/': typeof IndexRoute
+  '/app': typeof AppRouteRouteWithChildren
+  '/app/table-editor': typeof AppTableEditorRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/": typeof IndexRoute;
-  "/app": typeof AppRouteRouteWithChildren;
-  "/app/table-editor": typeof AppTableEditorRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/app': typeof AppRouteRouteWithChildren
+  '/app/table-editor': typeof AppTableEditorRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/" | "/app" | "/app/table-editor";
-  fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/app" | "/app/table-editor";
-  id: "__root__" | "/" | "/app" | "/app/table-editor";
-  fileRoutesById: FileRoutesById;
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths: '/' | '/app' | '/app/table-editor'
+  fileRoutesByTo: FileRoutesByTo
+  to: '/' | '/app' | '/app/table-editor'
+  id: '__root__' | '/' | '/app' | '/app/table-editor'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  AppRouteRoute: typeof AppRouteRouteWithChildren;
+  IndexRoute: typeof IndexRoute
+  AppRouteRoute: typeof AppRouteRouteWithChildren
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/app": {
-      id: "/app";
-      path: "/app";
-      fullPath: "/app";
-      preLoaderRoute: typeof AppRouteRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/app/table-editor": {
-      id: "/app/table-editor";
-      path: "/table-editor";
-      fullPath: "/app/table-editor";
-      preLoaderRoute: typeof AppTableEditorRouteImport;
-      parentRoute: typeof AppRouteRoute;
-    };
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/table-editor': {
+      id: '/app/table-editor'
+      path: '/table-editor'
+      fullPath: '/app/table-editor'
+      preLoaderRoute: typeof AppTableEditorRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
   }
 }
 
 interface AppRouteRouteChildren {
-  AppTableEditorRoute: typeof AppTableEditorRoute;
+  AppTableEditorRoute: typeof AppTableEditorRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppTableEditorRoute: AppTableEditorRoute,
-};
+}
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
   AppRouteRouteChildren,
-);
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRouteRoute: AppRouteRouteWithChildren,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
