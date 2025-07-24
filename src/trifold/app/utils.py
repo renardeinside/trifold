@@ -42,6 +42,7 @@ class TimedCachedProperty(Generic[T]):
     def __set_name__(self, owner: Any, name: str) -> None:
         self.name = name
 
+
 def custom_openapi(app: FastAPI):
     if app.openapi_schema:
         return app.openapi_schema

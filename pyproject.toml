@@ -25,6 +25,7 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "hatchling>=1.27.0",
+    "ruff>=0.12.4",
 ]
 
 [tool.uv-dynamic-versioning]

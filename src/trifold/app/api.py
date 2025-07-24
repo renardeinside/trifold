@@ -1,8 +1,7 @@
 from functools import partial
 from fastapi.responses import JSONResponse
-from sqlmodel import Session, select
+from sqlmodel import select
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service import iam
 from fastapi import Depends, FastAPI
 from trifold import __version__
 from trifold.app.config import rt

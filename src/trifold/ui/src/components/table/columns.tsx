@@ -1,9 +1,19 @@
-import type { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, Package, Euro, Copy, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import type { DessertOut } from "@/lib/api"
-import { EditableCell } from "@/components/table/editable-cell"
+"use client";
+
+import { type ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown, MoreHorizontal, Trash2, Copy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { EditableCell } from "./editable-cell";
+import { DeleteDessertModal } from "./delete-dessert-modal";
+import type { DessertOut } from "@/lib/api";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export const columns: ColumnDef<DessertOut>[] = [
   {
@@ -13,16 +23,24 @@ export const columns: ColumnDef<DessertOut>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="h-8 px-2 lg:px-3"
         >
           Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
-    cell: ({ getValue, row, column, table }) => (
-      <EditableCell getValue={getValue} row={row} column={column} table={table} type="text" className="font-medium" />
-    ),
+    cell: ({ getValue, row, column, table }) => {
+      return (
+        <EditableCell
+          getValue={getValue}
+          row={row}
+          column={column}
+          table={table}
+          type="text"
+          className="font-medium"
+        />
+      );
+    },
   },
   {
     accessorKey: "price",
@@ -31,39 +49,41 @@ export const columns: ColumnDef<DessertOut>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="h-8 px-2 lg:px-3"
         >
-          <Euro className="mr-2 h-4 w-4" />
           Price
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
-    cell: ({ getValue, row, column, table }) => (
-      <EditableCell
-        getValue={getValue}
-        row={row}
-        column={column}
-        table={table}
-        type="number"
-        format={(value) => `€${Number(value).toFixed(2)}`}
-        className="font-mono"
-      />
-    ),
+    cell: ({ getValue, row, column, table }) => {
+      return (
+        <EditableCell
+          getValue={getValue}
+          row={row}
+          column={column}
+          table={table}
+          type="number"
+          format={(value) => `$${Number(value).toFixed(2)}`}
+          className="font-mono"
+        />
+      );
+    },
   },
   {
     accessorKey: "description",
     header: "Description",
-    cell: ({ getValue, row, column, table }) => (
-      <EditableCell
-        getValue={getValue}
-        row={row}
-        column={column}
-        table={table}
-        type="textarea"
-        className="max-w-[300px] text-sm text-muted-foreground"
-      />
-    ),
+    cell: ({ getValue, row, column, table }) => {
+      return (
+        <EditableCell
+          getValue={getValue}
+          row={row}
+          column={column}
+          table={table}
+          type="textarea"
+          className="min-w-96 w-full max-w-md whitespace-normal break-words text-sm text-muted-foreground"
+        />
+      );
+    },
   },
   {
     accessorKey: "leftInStock",
@@ -72,72 +92,74 @@ export const columns: ColumnDef<DessertOut>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="h-8 px-2 lg:px-3"
         >
-          <Package className="mr-2 h-4 w-4" />
           Stock
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
     cell: ({ getValue, row, column, table }) => {
-      const stock = getValue<number>()
       return (
-        <div className="flex items-center gap-2">
-          <EditableCell
-            getValue={getValue}
-            row={row}
-            column={column}
-            table={table}
-            type="number"
-            className="font-mono w-16"
-          />
-          <Badge variant={stock === 0 ? "destructive" : stock < 10 ? "secondary" : "default"} className="text-xs">
-            {stock === 0 ? "Out" : stock < 10 ? "Low" : "In Stock"}
-          </Badge>
-        </div>
-      )
+        <EditableCell
+          getValue={getValue}
+          row={row}
+          column={column}
+          table={table}
+          type="number"
+          className="font-mono w-16"
+        />
+      );
     },
   },
   {
     id: "actions",
-    header: "Actions",
     cell: ({ row }) => {
-      const id = row.original.id
+      const dessert = row.original;
 
-      const handleCopyId = () => {
-        navigator.clipboard.writeText(id.toString())
-        // You could add a toast notification here
-      }
+      // Local state to control delete modal visibility
+      const [open, setOpen] = useState(false);
 
-      const handleDeleteRow = () => {
-        // This is just for UI demonstration - no actual deletion logic
-        console.log(`Delete row with ID: ${id}`)
-        // You could add actual deletion logic here
-      }
+      const copyId = async () => {
+        try {
+          await navigator.clipboard.writeText(dessert.id.toString());
+          toast.success("ID copied to clipboard");
+        } catch (err) {
+          toast.error("Failed to copy ID to clipboard");
+        }
+      };
 
       return (
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleCopyId}
-            className="h-8 w-8 p-0"
-            title="Copy ID"
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleDeleteRow}
-            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-            title="Delete row"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      )
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={copyId}>
+                <Copy className="mr-2 h-4 w-4" /> Copy ID
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setOpen(true);
+                }}
+              >
+                <Trash2 className="mr-2 h-4 w-4 text-red-600" /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Delete confirmation modal */}
+          <DeleteDessertModal
+            dessert={dessert}
+            open={open}
+            onOpenChange={setOpen}
+          />
+        </>
+      );
     },
   },
-]
+];

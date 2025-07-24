@@ -1,12 +1,12 @@
 // orval.config.ts
-import type { Config } from 'orval';
+import type { Config } from "orval";
 
 export default {
   fastapi: {
-    input: 'http://127.0.0.1:8000/api/openapi.json',
+    input: "http://127.0.0.1:8000/api/openapi.json",
     output: {
-      target: './src/lib/api.ts',
-      client: 'react-query',
+      target: "./src/lib/api.ts",
+      client: "react-query",
       prettier: true,
       override: {
         query: {

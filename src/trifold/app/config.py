@@ -22,8 +22,8 @@ logger.setLevel(logging.DEBUG)
 
 # Create formatter with function name
 formatter = logging.Formatter(
-    fmt='%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d | %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    fmt="%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 
 # Create console handler and set formatter
@@ -110,7 +110,6 @@ class Runtime(BaseModel):
 
     @model_validator(mode="after")
     def validate_conf(self) -> Runtime:
-
         try:
             self.ws.current_user.me()
             assert self.engine is not None, "Engine is not initialized"

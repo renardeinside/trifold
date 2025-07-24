@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 export default function FadeInOnce({
   children,
@@ -18,7 +18,7 @@ export default function FadeInOnce({
     <motion.div
       initial={!animated ? { opacity: 0, y: 10 } : false}
       animate={!animated ? { opacity: 1, y: 0 } : false}
-      transition={{ duration, ease: 'easeIn' }}
+      transition={{ duration, ease: "easeIn" }}
     >
       {children}
     </motion.div>
