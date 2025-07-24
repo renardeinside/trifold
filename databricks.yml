@@ -20,6 +20,11 @@ resources:
       source_code_path: ./.build
       config:
         command: ["uvicorn", "trifold.app.app:app", "--workers", "2"]
+      resources:
+        - name: "trifold"
+          description: "Application database"
+          database:
+            name: "trifold"
 
 targets:
   dev:

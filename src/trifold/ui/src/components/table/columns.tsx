@@ -63,7 +63,7 @@ export const columns: ColumnDef<DessertOut>[] = [
           column={column}
           table={table}
           type="number"
-          format={(value) => `$${Number(value).toFixed(2)}`}
+          format={(value) => `${Number(value).toFixed(2)}€`}
           className="font-mono"
         />
       );

@@ -32,7 +32,7 @@ function Landing() {
         </span>
       </div>
 
-      <div className="flex flex-col items-center mb-8">
+      <div className="flex flex-col items-center gap-8">
         <FadeIn>
           <div className="flex flex-col items-center">
             <Logo className="h-64 w-64 mb-4 drop-shadow-lg" />
@@ -40,6 +40,10 @@ function Landing() {
               Full Stack Data App on <AuroraText>Databricks</AuroraText>
             </h1>
           </div>
+          <p className="text-muted-foreground text-center">
+            Trifold is an example of a full stack data app built on top of
+            Databricks Apps and Lakebase.
+          </p>
         </FadeIn>
 
         <Link to="/app/table-editor">

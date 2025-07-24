@@ -23,8 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
-import { useCreateDessert } from "@/lib/api";
-import { refetchDesserts } from "@/lib/utils";
+import { useCreateDessert, useDesserts } from "@/lib/api";
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -37,6 +36,7 @@ const formSchema = z.object({
 export function AddDessertModal() {
   const [isOpen, setIsOpen] = useState(false);
   const mutation = useCreateDessert();
+  const { refetch } = useDesserts();
 
   // Initialize React Hook Form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -54,7 +54,7 @@ export function AddDessertModal() {
       await mutation.mutateAsync({ data: values });
       form.reset();
       setIsOpen(false);
-      refetchDesserts();
+      await refetch();
     } catch (error) {
       console.error("Failed to add dessert:", error);
     }

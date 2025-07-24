@@ -4,8 +4,8 @@ import { useState } from "react";
 import type { Row, Column, Table } from "@tanstack/react-table";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { cn, refetchDesserts } from "@/lib/utils";
-import { type DessertOut, useUpdateDessert } from "@/lib/api";
+import { cn } from "@/lib/utils";
+import { type DessertOut, useDesserts, useUpdateDessert } from "@/lib/api";
 
 interface EditableCellProps {
   getValue: () => any;
@@ -29,6 +29,7 @@ export function EditableCell({
   const [value, setValue] = useState(initialValue);
   const [isEditing, setIsEditing] = useState(false);
   const mutation = useUpdateDessert();
+  const { refetch } = useDesserts();
 
   const onBlur = async () => {
     setIsEditing(false);
@@ -46,7 +47,7 @@ export function EditableCell({
           },
           {
             onSuccess: () => {
-              refetchDesserts();
+              refetch();
             },
           },
         );

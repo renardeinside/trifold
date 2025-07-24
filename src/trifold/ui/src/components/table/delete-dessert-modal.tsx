@@ -8,8 +8,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Trash2 } from "lucide-react";
-import { useDeleteDessert, type DessertOut } from "@/lib/api";
-import { refetchDesserts } from "@/lib/utils";
+import { useDeleteDessert, useDesserts, type DessertOut } from "@/lib/api";
 
 interface DeleteDessertModalProps {
   dessert: DessertOut;
@@ -23,12 +22,13 @@ export function DeleteDessertModal({
   onOpenChange,
 }: DeleteDessertModalProps) {
   const mutation = useDeleteDessert();
+  const { refetch } = useDesserts();
 
   const handleDelete = async () => {
     try {
       await mutation.mutateAsync({ dessertId: dessert.id });
       onOpenChange(false);
-      refetchDesserts();
+      await refetch();
     } catch (error) {
       // Error is handled by the store, but we could show a toast here
       console.error("Failed to delete dessert:", error);
