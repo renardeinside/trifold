@@ -1,6 +1,6 @@
 import type React from "react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Row, Column, Table } from "@tanstack/react-table";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,6 +30,11 @@ export function EditableCell({
   const [isEditing, setIsEditing] = useState(false);
   const mutation = useUpdateDessert();
   const { refetch } = useDesserts();
+
+  // If the initialValue is changed external, sync it up with our state
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
 
   const onBlur = async () => {
     setIsEditing(false);

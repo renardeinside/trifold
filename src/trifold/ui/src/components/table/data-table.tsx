@@ -18,7 +18,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useDessertsSuspense } from "@/lib/api";
-import selector from "@/lib/selector";
 import { columns } from "@/components/table/columns";
 import { Skeleton } from "@/components/ui/skeleton";
 import FadeIn from "@/components/FadeIn";
@@ -27,7 +26,14 @@ function DessertTableContent() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const { data } = useDessertsSuspense(selector());
+  const { data } = useDessertsSuspense({
+    query: {
+      refetchInterval: 1000,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      select: (d) => d.data,
+    },
+  });
 
   const table = useReactTable({
     data,
