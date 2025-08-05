@@ -28,7 +28,6 @@ function DessertTableContent() {
   const [globalFilter, setGlobalFilter] = useState("");
   const { data } = useDessertsSuspense({
     query: {
-      refetchInterval: 1000,
       refetchOnWindowFocus: true,
       refetchOnMount: true,
       select: (d) => d.data,
@@ -64,9 +63,9 @@ function DessertTableContent() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                     </TableHead>
                   );
                 })}
