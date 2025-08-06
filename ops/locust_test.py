@@ -23,20 +23,20 @@ from locust import HttpUser, task, between, LocustResponse
 class DessertAPIUser(HttpUser):
     """
     A Locust user that simulates API interactions with the desserts endpoints.
-    
+
     This user performs realistic CRUD operations with proper data management:
     - Creates desserts that can be later updated/deleted
     - Maintains a local cache of created dessert IDs
     - Uses realistic test data with variations
     """
-    
+
     wait_time = between(1, 3)  # Wait 1-3 seconds between tasks
-    
+
     def on_start(self):
         """Initialize user state when starting."""
         self.created_desserts: List[int] = []
         self.test_desserts = self._get_test_dessert_data()
-    
+
     def _get_test_dessert_data(self) -> List[Dict]:
         """Generate realistic test data for desserts."""
         return [
@@ -44,40 +44,40 @@ class DessertAPIUser(HttpUser):
                 "name": "Chocolate Lava Cake",
                 "price": 8.99,
                 "description": "Rich chocolate cake with molten center",
-                "leftInStock": random.randint(5, 20)
+                "leftInStock": random.randint(5, 20),
             },
             {
                 "name": "Tiramisu",
                 "price": 7.50,
                 "description": "Classic Italian coffee-flavored dessert",
-                "leftInStock": random.randint(3, 15)
+                "leftInStock": random.randint(3, 15),
             },
             {
                 "name": "Crème Brûlée",
                 "price": 9.25,
                 "description": "Vanilla custard with caramelized sugar top",
-                "leftInStock": random.randint(4, 12)
+                "leftInStock": random.randint(4, 12),
             },
             {
                 "name": "Apple Pie",
                 "price": 6.75,
                 "description": "Traditional apple pie with cinnamon",
-                "leftInStock": random.randint(8, 25)
+                "leftInStock": random.randint(8, 25),
             },
             {
                 "name": "Cheesecake",
                 "price": 8.50,
                 "description": "New York style cheesecake with berry sauce",
-                "leftInStock": random.randint(6, 18)
+                "leftInStock": random.randint(6, 18),
             },
             {
                 "name": "Ice Cream Sundae",
                 "price": 5.99,
                 "description": "Vanilla ice cream with hot fudge and nuts",
-                "leftInStock": random.randint(10, 30)
-            }
+                "leftInStock": random.randint(10, 30),
+            },
         ]
-    
+
     @task(3)
     def list_desserts(self):
         """
@@ -97,7 +97,7 @@ class DessertAPIUser(HttpUser):
                     response.failure("Invalid JSON response")
             else:
                 response.failure(f"HTTP {response.status_code}")
-    
+
     @task(2)
     def create_dessert(self):
         """
@@ -105,16 +105,16 @@ class DessertAPIUser(HttpUser):
         Creates a new dessert and stores its ID for later operations.
         """
         dessert_data = random.choice(self.test_desserts).copy()
-        
+
         # Add randomization to make each request unique
         dessert_data["name"] = f"{dessert_data['name']} #{random.randint(1000, 9999)}"
         dessert_data["leftInStock"] = random.randint(1, 50)
-        
+
         with self.client.post(
             "/api/desserts",
             json=dessert_data,
             headers={"Content-Type": "application/json"},
-            catch_response=True
+            catch_response=True,
         ) as response:
             if response.status_code == 200:
                 try:
@@ -128,7 +128,7 @@ class DessertAPIUser(HttpUser):
                     response.failure("Invalid JSON response")
             else:
                 response.failure(f"HTTP {response.status_code}")
-    
+
     @task(1)
     def update_dessert(self):
         """
@@ -137,20 +137,22 @@ class DessertAPIUser(HttpUser):
         """
         if not self.created_desserts:
             return  # Skip if no desserts to update
-        
+
         dessert_id = random.choice(self.created_desserts)
         updated_data = random.choice(self.test_desserts).copy()
-        
+
         # Modify data to simulate updates
         updated_data["name"] = f"Updated {updated_data['name']}"
-        updated_data["price"] = round(updated_data["price"] * random.uniform(0.8, 1.2), 2)
+        updated_data["price"] = round(
+            updated_data["price"] * random.uniform(0.8, 1.2), 2
+        )
         updated_data["leftInStock"] = random.randint(0, 100)
-        
+
         with self.client.put(
             f"/api/desserts/{dessert_id}",
             json=updated_data,
             headers={"Content-Type": "application/json"},
-            catch_response=True
+            catch_response=True,
         ) as response:
             if response.status_code == 200:
                 try:
@@ -168,7 +170,7 @@ class DessertAPIUser(HttpUser):
                 response.failure("Dessert not found")
             else:
                 response.failure(f"HTTP {response.status_code}")
-    
+
     @task(1)
     def delete_dessert(self):
         """
@@ -177,9 +179,13 @@ class DessertAPIUser(HttpUser):
         """
         if not self.created_desserts:
             return  # Skip if no desserts to delete
-        
-        dessert_id = self.created_desserts.pop(random.randint(0, len(self.created_desserts) - 1))
-        with self.client.delete(f"/api/desserts/{dessert_id}", catch_response=True) as response:
+
+        dessert_id = self.created_desserts.pop(
+            random.randint(0, len(self.created_desserts) - 1)
+        )
+        with self.client.delete(
+            f"/api/desserts/{dessert_id}", catch_response=True
+        ) as response:
             assert isinstance(response, LocustResponse)
             if response.status_code == 204:
                 response.success()
@@ -194,14 +200,14 @@ class HighVolumeUser(HttpUser):
     A more aggressive user for stress testing.
     This user focuses on high-frequency read operations with occasional writes.
     """
-    
+
     wait_time = between(0.1, 0.5)  # Very short wait times for stress testing
-    
+
     @task(10)
     def rapid_list_desserts(self):
         """Rapid-fire dessert listing for stress testing."""
         self.client.get("/api/desserts")
-    
+
     @task(1)
     def quick_create(self):
         """Quick dessert creation."""
@@ -209,13 +215,13 @@ class HighVolumeUser(HttpUser):
             "name": f"Stress Test Dessert {random.randint(1, 10000)}",
             "price": round(random.uniform(5.0, 15.0), 2),
             "description": "Generated for stress testing",
-            "leftInStock": random.randint(1, 100)
+            "leftInStock": random.randint(1, 100),
         }
-        
+
         self.client.post(
             "/api/desserts",
             json=dessert_data,
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         )
 
 
@@ -224,42 +230,30 @@ class TestScenarios:
     """
     Different test configurations for various performance testing scenarios.
     """
-    
+
     @staticmethod
     def normal_load():
         """
         Normal load test configuration.
         Use: locust -f ops/locust_test.py --host=http://localhost:8080 -u 5 -r 1
         """
-        return {
-            "users": 5,
-            "spawn_rate": 1,
-            "run_time": "5m"
-        }
-    
+        return {"users": 5, "spawn_rate": 1, "run_time": "5m"}
+
     @staticmethod
     def stress_test():
         """
         Stress test configuration.
         Use: locust -f ops/locust_test.py --host=http://localhost:8080 -u 50 -r 5
         """
-        return {
-            "users": 50,
-            "spawn_rate": 5,
-            "run_time": "10m"
-        }
-    
+        return {"users": 50, "spawn_rate": 5, "run_time": "10m"}
+
     @staticmethod
     def spike_test():
         """
         Spike test configuration.
         Use: locust -f ops/locust_test.py --host=http://localhost:8080 -u 100 -r 10
         """
-        return {
-            "users": 100,
-            "spawn_rate": 10,
-            "run_time": "2m"
-        }
+        return {"users": 100, "spawn_rate": 10, "run_time": "2m"}
 
 
 if __name__ == "__main__":

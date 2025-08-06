@@ -13,7 +13,7 @@ from trifold.app.database import create_db_and_tables
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ARG001
     # Configure global logging to use consistent formatting for all loggers
-    
+
     rt.logger.info(f"Starting the application with version {__version__}")
     rt.logger.info(f"App config: {conf.model_dump_json(indent=2)}")
     create_db_and_tables()

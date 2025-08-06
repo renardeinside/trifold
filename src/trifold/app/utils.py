@@ -9,9 +9,6 @@ from fastapi.openapi.utils import get_openapi
 
 T = TypeVar("T")
 
-# Global flag to track if logging has been configured
-_logging_configured = False
-
 
 class TimedCachedProperty(Generic[T]):
     """A property decorator that caches the result for a specified duration."""
@@ -49,12 +46,7 @@ class TimedCachedProperty(Generic[T]):
 
 def configure_consistent_logging() -> None:
     """Configure app loggers with consistent formatting"""
-    global _logging_configured
-    
-    # Check if logging has already been configured to avoid duplicates
-    if _logging_configured:
-        return
-    
+
     # Create the custom formatter with process ID to distinguish workers
     formatter = logging.Formatter(
         fmt="%(asctime)s.%(msecs)03d| %(levelname)-8s | PID:%(process)d | %(name)s:%(funcName)s:%(lineno)d | %(message)s",
@@ -67,16 +59,21 @@ def configure_consistent_logging() -> None:
     console_handler.setLevel(logging.DEBUG)
 
     # Get the loggers: uvicorn, uvicorn.error, uvicorn.access, trifold and configure them
-    for logger_name in ["uvicorn", "uvicorn.error", "uvicorn.access", "trifold", "sqlalchemy.engine", "sqlalchemy.pool", "sqlalchemy.engine"]:
+    for logger_name in [
+        "uvicorn",
+        "uvicorn.error",
+        "uvicorn.access",
+        "trifold",
+        "sqlalchemy.engine",
+        "sqlalchemy.pool",
+        "sqlalchemy.engine",
+    ]:
         logger = logging.getLogger(logger_name)
         # Clear existing handlers to avoid duplicates
         logger.handlers.clear()
         logger.addHandler(console_handler)
         # Prevent log propagation to avoid duplicate messages
         logger.propagate = False
-    
-    # Mark as configured
-    _logging_configured = True
 
 
 def setup_logging(logger_name: str) -> logging.Logger:

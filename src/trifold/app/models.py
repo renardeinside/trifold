@@ -5,7 +5,6 @@ from functools import lru_cache
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service import iam
 from trifold import __version__
-from sqlalchemy import DDL, event
 
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel

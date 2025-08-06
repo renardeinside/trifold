@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Trifold | Full stack data application on Databricks
  * Trifold is a full stack data application on Databricks
- * OpenAPI spec version: 0.0.0+0b05cd9.20250717204818
+ * OpenAPI spec version: 0.0.0+58ac770.20250805211122
  */
 import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
@@ -22,9 +22,6 @@ import type {
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
-
-import * as axios from "axios";
-import type { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 
 export type ComplexValueDisplay = string | null;
 
@@ -140,10 +137,33 @@ export interface VersionView {
 /**
  * @summary Version
  */
-export const version = (
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<VersionView>> => {
-  return axios.default.get(`/api/version`, options);
+export type versionResponse200 = {
+  data: VersionView;
+  status: 200;
+};
+
+export type versionResponseComposite = versionResponse200;
+
+export type versionResponse = versionResponseComposite & {
+  headers: Headers;
+};
+
+export const getVersionUrl = () => {
+  return `/api/version`;
+};
+
+export const version = async (
+  options?: RequestInit,
+): Promise<versionResponse> => {
+  const res = await fetch(getVersionUrl(), {
+    ...options,
+    method: "GET",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  const data: versionResponse["data"] = body ? JSON.parse(body) : {};
+
+  return { data, status: res.status, headers: res.headers } as versionResponse;
 };
 
 export const getVersionQueryKey = () => {
@@ -152,20 +172,20 @@ export const getVersionQueryKey = () => {
 
 export const getVersionQueryOptions = <
   TData = Awaited<ReturnType<typeof version>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(options?: {
   query?: Partial<
     UseQueryOptions<Awaited<ReturnType<typeof version>>, TError, TData>
   >;
-  axios?: AxiosRequestConfig;
+  fetch?: RequestInit;
 }) => {
-  const { query: queryOptions, axios: axiosOptions } = options ?? {};
+  const { query: queryOptions, fetch: fetchOptions } = options ?? {};
 
   const queryKey = queryOptions?.queryKey ?? getVersionQueryKey();
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof version>>> = ({
     signal,
-  }) => version({ signal, ...axiosOptions });
+  }) => version({ signal, ...fetchOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof version>>,
@@ -177,11 +197,11 @@ export const getVersionQueryOptions = <
 export type VersionQueryResult = NonNullable<
   Awaited<ReturnType<typeof version>>
 >;
-export type VersionQueryError = AxiosError<unknown>;
+export type VersionQueryError = unknown;
 
 export function useVersion<
   TData = Awaited<ReturnType<typeof version>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options: {
     query: Partial<
@@ -195,7 +215,7 @@ export function useVersion<
         >,
         "initialData"
       >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & {
@@ -203,7 +223,7 @@ export function useVersion<
 };
 export function useVersion<
   TData = Awaited<ReturnType<typeof version>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
@@ -217,7 +237,7 @@ export function useVersion<
         >,
         "initialData"
       >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -225,13 +245,13 @@ export function useVersion<
 };
 export function useVersion<
   TData = Awaited<ReturnType<typeof version>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof version>>, TError, TData>
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -243,13 +263,13 @@ export function useVersion<
 
 export function useVersion<
   TData = Awaited<ReturnType<typeof version>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof version>>, TError, TData>
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -269,20 +289,20 @@ export function useVersion<
 
 export const getVersionSuspenseQueryOptions = <
   TData = Awaited<ReturnType<typeof version>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(options?: {
   query?: Partial<
     UseSuspenseQueryOptions<Awaited<ReturnType<typeof version>>, TError, TData>
   >;
-  axios?: AxiosRequestConfig;
+  fetch?: RequestInit;
 }) => {
-  const { query: queryOptions, axios: axiosOptions } = options ?? {};
+  const { query: queryOptions, fetch: fetchOptions } = options ?? {};
 
   const queryKey = queryOptions?.queryKey ?? getVersionQueryKey();
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof version>>> = ({
     signal,
-  }) => version({ signal, ...axiosOptions });
+  }) => version({ signal, ...fetchOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
     Awaited<ReturnType<typeof version>>,
@@ -294,11 +314,11 @@ export const getVersionSuspenseQueryOptions = <
 export type VersionSuspenseQueryResult = NonNullable<
   Awaited<ReturnType<typeof version>>
 >;
-export type VersionSuspenseQueryError = AxiosError<unknown>;
+export type VersionSuspenseQueryError = unknown;
 
 export function useVersionSuspense<
   TData = Awaited<ReturnType<typeof version>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options: {
     query: Partial<
@@ -308,7 +328,7 @@ export function useVersionSuspense<
         TData
       >
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & {
@@ -316,7 +336,7 @@ export function useVersionSuspense<
 };
 export function useVersionSuspense<
   TData = Awaited<ReturnType<typeof version>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
@@ -326,7 +346,7 @@ export function useVersionSuspense<
         TData
       >
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & {
@@ -334,7 +354,7 @@ export function useVersionSuspense<
 };
 export function useVersionSuspense<
   TData = Awaited<ReturnType<typeof version>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
@@ -344,7 +364,7 @@ export function useVersionSuspense<
         TData
       >
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & {
@@ -356,7 +376,7 @@ export function useVersionSuspense<
 
 export function useVersionSuspense<
   TData = Awaited<ReturnType<typeof version>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
@@ -366,7 +386,7 @@ export function useVersionSuspense<
         TData
       >
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & {
@@ -389,10 +409,33 @@ export function useVersionSuspense<
 /**
  * @summary Profile
  */
-export const profile = (
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<ProfileView>> => {
-  return axios.default.get(`/api/profile`, options);
+export type profileResponse200 = {
+  data: ProfileView;
+  status: 200;
+};
+
+export type profileResponseComposite = profileResponse200;
+
+export type profileResponse = profileResponseComposite & {
+  headers: Headers;
+};
+
+export const getProfileUrl = () => {
+  return `/api/profile`;
+};
+
+export const profile = async (
+  options?: RequestInit,
+): Promise<profileResponse> => {
+  const res = await fetch(getProfileUrl(), {
+    ...options,
+    method: "GET",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  const data: profileResponse["data"] = body ? JSON.parse(body) : {};
+
+  return { data, status: res.status, headers: res.headers } as profileResponse;
 };
 
 export const getProfileQueryKey = () => {
@@ -401,20 +444,20 @@ export const getProfileQueryKey = () => {
 
 export const getProfileQueryOptions = <
   TData = Awaited<ReturnType<typeof profile>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(options?: {
   query?: Partial<
     UseQueryOptions<Awaited<ReturnType<typeof profile>>, TError, TData>
   >;
-  axios?: AxiosRequestConfig;
+  fetch?: RequestInit;
 }) => {
-  const { query: queryOptions, axios: axiosOptions } = options ?? {};
+  const { query: queryOptions, fetch: fetchOptions } = options ?? {};
 
   const queryKey = queryOptions?.queryKey ?? getProfileQueryKey();
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof profile>>> = ({
     signal,
-  }) => profile({ signal, ...axiosOptions });
+  }) => profile({ signal, ...fetchOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof profile>>,
@@ -426,11 +469,11 @@ export const getProfileQueryOptions = <
 export type ProfileQueryResult = NonNullable<
   Awaited<ReturnType<typeof profile>>
 >;
-export type ProfileQueryError = AxiosError<unknown>;
+export type ProfileQueryError = unknown;
 
 export function useProfile<
   TData = Awaited<ReturnType<typeof profile>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options: {
     query: Partial<
@@ -444,7 +487,7 @@ export function useProfile<
         >,
         "initialData"
       >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & {
@@ -452,7 +495,7 @@ export function useProfile<
 };
 export function useProfile<
   TData = Awaited<ReturnType<typeof profile>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
@@ -466,7 +509,7 @@ export function useProfile<
         >,
         "initialData"
       >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -474,13 +517,13 @@ export function useProfile<
 };
 export function useProfile<
   TData = Awaited<ReturnType<typeof profile>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof profile>>, TError, TData>
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -492,13 +535,13 @@ export function useProfile<
 
 export function useProfile<
   TData = Awaited<ReturnType<typeof profile>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof profile>>, TError, TData>
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -518,20 +561,20 @@ export function useProfile<
 
 export const getProfileSuspenseQueryOptions = <
   TData = Awaited<ReturnType<typeof profile>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(options?: {
   query?: Partial<
     UseSuspenseQueryOptions<Awaited<ReturnType<typeof profile>>, TError, TData>
   >;
-  axios?: AxiosRequestConfig;
+  fetch?: RequestInit;
 }) => {
-  const { query: queryOptions, axios: axiosOptions } = options ?? {};
+  const { query: queryOptions, fetch: fetchOptions } = options ?? {};
 
   const queryKey = queryOptions?.queryKey ?? getProfileQueryKey();
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof profile>>> = ({
     signal,
-  }) => profile({ signal, ...axiosOptions });
+  }) => profile({ signal, ...fetchOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
     Awaited<ReturnType<typeof profile>>,
@@ -543,11 +586,11 @@ export const getProfileSuspenseQueryOptions = <
 export type ProfileSuspenseQueryResult = NonNullable<
   Awaited<ReturnType<typeof profile>>
 >;
-export type ProfileSuspenseQueryError = AxiosError<unknown>;
+export type ProfileSuspenseQueryError = unknown;
 
 export function useProfileSuspense<
   TData = Awaited<ReturnType<typeof profile>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options: {
     query: Partial<
@@ -557,7 +600,7 @@ export function useProfileSuspense<
         TData
       >
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & {
@@ -565,7 +608,7 @@ export function useProfileSuspense<
 };
 export function useProfileSuspense<
   TData = Awaited<ReturnType<typeof profile>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
@@ -575,7 +618,7 @@ export function useProfileSuspense<
         TData
       >
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & {
@@ -583,7 +626,7 @@ export function useProfileSuspense<
 };
 export function useProfileSuspense<
   TData = Awaited<ReturnType<typeof profile>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
@@ -593,7 +636,7 @@ export function useProfileSuspense<
         TData
       >
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & {
@@ -605,7 +648,7 @@ export function useProfileSuspense<
 
 export function useProfileSuspense<
   TData = Awaited<ReturnType<typeof profile>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
@@ -615,7 +658,7 @@ export function useProfileSuspense<
         TData
       >
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & {
@@ -638,10 +681,33 @@ export function useProfileSuspense<
 /**
  * @summary Desserts
  */
-export const desserts = (
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<DessertOut[]>> => {
-  return axios.default.get(`/api/desserts`, options);
+export type dessertsResponse200 = {
+  data: DessertOut[];
+  status: 200;
+};
+
+export type dessertsResponseComposite = dessertsResponse200;
+
+export type dessertsResponse = dessertsResponseComposite & {
+  headers: Headers;
+};
+
+export const getDessertsUrl = () => {
+  return `/api/desserts`;
+};
+
+export const desserts = async (
+  options?: RequestInit,
+): Promise<dessertsResponse> => {
+  const res = await fetch(getDessertsUrl(), {
+    ...options,
+    method: "GET",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  const data: dessertsResponse["data"] = body ? JSON.parse(body) : {};
+
+  return { data, status: res.status, headers: res.headers } as dessertsResponse;
 };
 
 export const getDessertsQueryKey = () => {
@@ -650,20 +716,20 @@ export const getDessertsQueryKey = () => {
 
 export const getDessertsQueryOptions = <
   TData = Awaited<ReturnType<typeof desserts>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(options?: {
   query?: Partial<
     UseQueryOptions<Awaited<ReturnType<typeof desserts>>, TError, TData>
   >;
-  axios?: AxiosRequestConfig;
+  fetch?: RequestInit;
 }) => {
-  const { query: queryOptions, axios: axiosOptions } = options ?? {};
+  const { query: queryOptions, fetch: fetchOptions } = options ?? {};
 
   const queryKey = queryOptions?.queryKey ?? getDessertsQueryKey();
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof desserts>>> = ({
     signal,
-  }) => desserts({ signal, ...axiosOptions });
+  }) => desserts({ signal, ...fetchOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof desserts>>,
@@ -675,11 +741,11 @@ export const getDessertsQueryOptions = <
 export type DessertsQueryResult = NonNullable<
   Awaited<ReturnType<typeof desserts>>
 >;
-export type DessertsQueryError = AxiosError<unknown>;
+export type DessertsQueryError = unknown;
 
 export function useDesserts<
   TData = Awaited<ReturnType<typeof desserts>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options: {
     query: Partial<
@@ -693,7 +759,7 @@ export function useDesserts<
         >,
         "initialData"
       >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & {
@@ -701,7 +767,7 @@ export function useDesserts<
 };
 export function useDesserts<
   TData = Awaited<ReturnType<typeof desserts>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
@@ -715,7 +781,7 @@ export function useDesserts<
         >,
         "initialData"
       >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -723,13 +789,13 @@ export function useDesserts<
 };
 export function useDesserts<
   TData = Awaited<ReturnType<typeof desserts>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof desserts>>, TError, TData>
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -741,13 +807,13 @@ export function useDesserts<
 
 export function useDesserts<
   TData = Awaited<ReturnType<typeof desserts>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof desserts>>, TError, TData>
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -767,20 +833,20 @@ export function useDesserts<
 
 export const getDessertsSuspenseQueryOptions = <
   TData = Awaited<ReturnType<typeof desserts>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(options?: {
   query?: Partial<
     UseSuspenseQueryOptions<Awaited<ReturnType<typeof desserts>>, TError, TData>
   >;
-  axios?: AxiosRequestConfig;
+  fetch?: RequestInit;
 }) => {
-  const { query: queryOptions, axios: axiosOptions } = options ?? {};
+  const { query: queryOptions, fetch: fetchOptions } = options ?? {};
 
   const queryKey = queryOptions?.queryKey ?? getDessertsQueryKey();
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof desserts>>> = ({
     signal,
-  }) => desserts({ signal, ...axiosOptions });
+  }) => desserts({ signal, ...fetchOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
     Awaited<ReturnType<typeof desserts>>,
@@ -792,11 +858,11 @@ export const getDessertsSuspenseQueryOptions = <
 export type DessertsSuspenseQueryResult = NonNullable<
   Awaited<ReturnType<typeof desserts>>
 >;
-export type DessertsSuspenseQueryError = AxiosError<unknown>;
+export type DessertsSuspenseQueryError = unknown;
 
 export function useDessertsSuspense<
   TData = Awaited<ReturnType<typeof desserts>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options: {
     query: Partial<
@@ -806,7 +872,7 @@ export function useDessertsSuspense<
         TData
       >
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & {
@@ -814,7 +880,7 @@ export function useDessertsSuspense<
 };
 export function useDessertsSuspense<
   TData = Awaited<ReturnType<typeof desserts>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
@@ -824,7 +890,7 @@ export function useDessertsSuspense<
         TData
       >
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & {
@@ -832,7 +898,7 @@ export function useDessertsSuspense<
 };
 export function useDessertsSuspense<
   TData = Awaited<ReturnType<typeof desserts>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
@@ -842,7 +908,7 @@ export function useDessertsSuspense<
         TData
       >
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & {
@@ -854,7 +920,7 @@ export function useDessertsSuspense<
 
 export function useDessertsSuspense<
   TData = Awaited<ReturnType<typeof desserts>>,
-  TError = AxiosError<unknown>,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
@@ -864,7 +930,7 @@ export function useDessertsSuspense<
         TData
       >
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & {
@@ -887,15 +953,51 @@ export function useDessertsSuspense<
 /**
  * @summary Create Dessert
  */
-export const createDessert = (
+export type createDessertResponse200 = {
+  data: DessertOut;
+  status: 200;
+};
+
+export type createDessertResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type createDessertResponseComposite =
+  | createDessertResponse200
+  | createDessertResponse422;
+
+export type createDessertResponse = createDessertResponseComposite & {
+  headers: Headers;
+};
+
+export const getCreateDessertUrl = () => {
+  return `/api/desserts`;
+};
+
+export const createDessert = async (
   dessertIn: DessertIn,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<DessertOut>> => {
-  return axios.default.post(`/api/desserts`, dessertIn, options);
+  options?: RequestInit,
+): Promise<createDessertResponse> => {
+  const res = await fetch(getCreateDessertUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(dessertIn),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  const data: createDessertResponse["data"] = body ? JSON.parse(body) : {};
+
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as createDessertResponse;
 };
 
 export const getCreateDessertMutationOptions = <
-  TError = AxiosError<HTTPValidationError>,
+  TError = HTTPValidationError,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -904,7 +1006,7 @@ export const getCreateDessertMutationOptions = <
     { data: DessertIn },
     TContext
   >;
-  axios?: AxiosRequestConfig;
+  fetch?: RequestInit;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof createDessert>>,
   TError,
@@ -912,13 +1014,13 @@ export const getCreateDessertMutationOptions = <
   TContext
 > => {
   const mutationKey = ["createDessert"];
-  const { mutation: mutationOptions, axios: axiosOptions } = options
+  const { mutation: mutationOptions, fetch: fetchOptions } = options
     ? options.mutation &&
       "mutationKey" in options.mutation &&
       options.mutation.mutationKey
       ? options
       : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, axios: undefined };
+    : { mutation: { mutationKey }, fetch: undefined };
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof createDessert>>,
@@ -926,7 +1028,7 @@ export const getCreateDessertMutationOptions = <
   > = (props) => {
     const { data } = props ?? {};
 
-    return createDessert(data, axiosOptions);
+    return createDessert(data, fetchOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -936,13 +1038,13 @@ export type CreateDessertMutationResult = NonNullable<
   Awaited<ReturnType<typeof createDessert>>
 >;
 export type CreateDessertMutationBody = DessertIn;
-export type CreateDessertMutationError = AxiosError<HTTPValidationError>;
+export type CreateDessertMutationError = HTTPValidationError;
 
 /**
  * @summary Create Dessert
  */
 export const useCreateDessert = <
-  TError = AxiosError<HTTPValidationError>,
+  TError = HTTPValidationError,
   TContext = unknown,
 >(
   options?: {
@@ -952,7 +1054,7 @@ export const useCreateDessert = <
       { data: DessertIn },
       TContext
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
@@ -969,16 +1071,52 @@ export const useCreateDessert = <
 /**
  * @summary Update Dessert
  */
-export const updateDessert = (
+export type updateDessertResponse200 = {
+  data: DessertOut;
+  status: 200;
+};
+
+export type updateDessertResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type updateDessertResponseComposite =
+  | updateDessertResponse200
+  | updateDessertResponse422;
+
+export type updateDessertResponse = updateDessertResponseComposite & {
+  headers: Headers;
+};
+
+export const getUpdateDessertUrl = (dessertId: number) => {
+  return `/api/desserts/${dessertId}`;
+};
+
+export const updateDessert = async (
   dessertId: number,
   dessertIn: DessertIn,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<DessertOut>> => {
-  return axios.default.put(`/api/desserts/${dessertId}`, dessertIn, options);
+  options?: RequestInit,
+): Promise<updateDessertResponse> => {
+  const res = await fetch(getUpdateDessertUrl(dessertId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(dessertIn),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  const data: updateDessertResponse["data"] = body ? JSON.parse(body) : {};
+
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as updateDessertResponse;
 };
 
 export const getUpdateDessertMutationOptions = <
-  TError = AxiosError<HTTPValidationError>,
+  TError = HTTPValidationError,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -987,7 +1125,7 @@ export const getUpdateDessertMutationOptions = <
     { dessertId: number; data: DessertIn },
     TContext
   >;
-  axios?: AxiosRequestConfig;
+  fetch?: RequestInit;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof updateDessert>>,
   TError,
@@ -995,13 +1133,13 @@ export const getUpdateDessertMutationOptions = <
   TContext
 > => {
   const mutationKey = ["updateDessert"];
-  const { mutation: mutationOptions, axios: axiosOptions } = options
+  const { mutation: mutationOptions, fetch: fetchOptions } = options
     ? options.mutation &&
       "mutationKey" in options.mutation &&
       options.mutation.mutationKey
       ? options
       : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, axios: undefined };
+    : { mutation: { mutationKey }, fetch: undefined };
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof updateDessert>>,
@@ -1009,7 +1147,7 @@ export const getUpdateDessertMutationOptions = <
   > = (props) => {
     const { dessertId, data } = props ?? {};
 
-    return updateDessert(dessertId, data, axiosOptions);
+    return updateDessert(dessertId, data, fetchOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -1019,13 +1157,13 @@ export type UpdateDessertMutationResult = NonNullable<
   Awaited<ReturnType<typeof updateDessert>>
 >;
 export type UpdateDessertMutationBody = DessertIn;
-export type UpdateDessertMutationError = AxiosError<HTTPValidationError>;
+export type UpdateDessertMutationError = HTTPValidationError;
 
 /**
  * @summary Update Dessert
  */
 export const useUpdateDessert = <
-  TError = AxiosError<HTTPValidationError>,
+  TError = HTTPValidationError,
   TContext = unknown,
 >(
   options?: {
@@ -1035,7 +1173,7 @@ export const useUpdateDessert = <
       { dessertId: number; data: DessertIn },
       TContext
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
@@ -1052,15 +1190,49 @@ export const useUpdateDessert = <
 /**
  * @summary Delete Dessert
  */
-export const deleteDessert = (
+export type deleteDessertResponse200 = {
+  data: unknown;
+  status: 200;
+};
+
+export type deleteDessertResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type deleteDessertResponseComposite =
+  | deleteDessertResponse200
+  | deleteDessertResponse422;
+
+export type deleteDessertResponse = deleteDessertResponseComposite & {
+  headers: Headers;
+};
+
+export const getDeleteDessertUrl = (dessertId: number) => {
+  return `/api/desserts/${dessertId}`;
+};
+
+export const deleteDessert = async (
   dessertId: number,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<unknown>> => {
-  return axios.default.delete(`/api/desserts/${dessertId}`, options);
+  options?: RequestInit,
+): Promise<deleteDessertResponse> => {
+  const res = await fetch(getDeleteDessertUrl(dessertId), {
+    ...options,
+    method: "DELETE",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  const data: deleteDessertResponse["data"] = body ? JSON.parse(body) : {};
+
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as deleteDessertResponse;
 };
 
 export const getDeleteDessertMutationOptions = <
-  TError = AxiosError<HTTPValidationError>,
+  TError = HTTPValidationError,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1069,7 +1241,7 @@ export const getDeleteDessertMutationOptions = <
     { dessertId: number },
     TContext
   >;
-  axios?: AxiosRequestConfig;
+  fetch?: RequestInit;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof deleteDessert>>,
   TError,
@@ -1077,13 +1249,13 @@ export const getDeleteDessertMutationOptions = <
   TContext
 > => {
   const mutationKey = ["deleteDessert"];
-  const { mutation: mutationOptions, axios: axiosOptions } = options
+  const { mutation: mutationOptions, fetch: fetchOptions } = options
     ? options.mutation &&
       "mutationKey" in options.mutation &&
       options.mutation.mutationKey
       ? options
       : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, axios: undefined };
+    : { mutation: { mutationKey }, fetch: undefined };
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof deleteDessert>>,
@@ -1091,7 +1263,7 @@ export const getDeleteDessertMutationOptions = <
   > = (props) => {
     const { dessertId } = props ?? {};
 
-    return deleteDessert(dessertId, axiosOptions);
+    return deleteDessert(dessertId, fetchOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -1101,13 +1273,13 @@ export type DeleteDessertMutationResult = NonNullable<
   Awaited<ReturnType<typeof deleteDessert>>
 >;
 
-export type DeleteDessertMutationError = AxiosError<HTTPValidationError>;
+export type DeleteDessertMutationError = HTTPValidationError;
 
 /**
  * @summary Delete Dessert
  */
 export const useDeleteDessert = <
-  TError = AxiosError<HTTPValidationError>,
+  TError = HTTPValidationError,
   TContext = unknown,
 >(
   options?: {
@@ -1117,7 +1289,7 @@ export const useDeleteDessert = <
       { dessertId: number },
       TContext
     >;
-    axios?: AxiosRequestConfig;
+    fetch?: RequestInit;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<

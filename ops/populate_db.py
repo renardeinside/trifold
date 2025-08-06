@@ -55,7 +55,7 @@ def populate_desserts():
         },
     ]
 
-    with rt.session as session:
+    with rt.session() as session:
         # Check if desserts already exist to avoid duplicates
         existing_desserts = session.exec(select(Dessert)).all()
         existing_names = {dessert.name for dessert in existing_desserts}

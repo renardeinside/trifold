@@ -1,9 +1,7 @@
 from functools import partial
-from fastapi.responses import JSONResponse
-from typing import Sequence
 from sqlmodel import select
 from databricks.sdk import WorkspaceClient
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException
 from trifold import __version__
 from trifold.app.config import rt
 from trifold.app.dependencies import get_user_workspace_client
@@ -16,7 +14,7 @@ from trifold.app.models import (
     get_cached_version,
 )
 from trifold.app.utils import custom_openapi
-from trifold.app.timer import timer
+
 
 app = FastAPI(
     title="Trifold | Full stack data application on Databricks",
@@ -37,17 +35,8 @@ async def profile(ws: WorkspaceClient = Depends(get_user_workspace_client)):
 
 @app.get("/desserts", response_model=list[DessertOut], operation_id="Desserts")
 async def desserts() -> list[DessertOut]:
-
-    @timer
-    def extract() -> Sequence[Dessert]:
-        with rt.session() as session:
-            return session.exec(select(Dessert).limit(10)).all()
-
-    @timer
-    def transform(desserts: Sequence[Dessert]) -> list[DessertOut]:
-        return [DessertOut.from_model(d) for d in desserts]
-
-    return transform(extract())
+    with rt.session() as session:
+        return [DessertOut.from_model(d) for d in session.exec(select(Dessert)).all()]
 
 
 @app.post("/desserts", response_model=DessertOut, operation_id="CreateDessert")
