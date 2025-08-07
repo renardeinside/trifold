@@ -28,6 +28,10 @@ def get_auth_headers() -> dict[str, str]:
     return ws.config.authenticate()
 
 
+# Test identifier prefix for easy identification
+TEST_DESSERT_PREFIX = "LocustTest"
+
+
 try:
     auth_headers = get_auth_headers()
 except Exception as e:
@@ -52,6 +56,18 @@ class DessertAPIUser(HttpUser):
         """Initialize user state when starting."""
         self.created_desserts: List[int] = []
         self.test_desserts = self._get_test_dessert_data()
+
+    def on_stop(self):
+        """Clean up individual user's desserts when stopping."""
+        if self.created_desserts:
+            print(f"User cleanup: deleting {len(self.created_desserts)} desserts")
+            for dessert_id in self.created_desserts:
+                try:
+                    self.client.delete(
+                        f"/api/desserts/{dessert_id}", headers=auth_headers
+                    )
+                except Exception as e:
+                    print(f"Error cleaning up dessert {dessert_id}: {e}")
 
     def _get_test_dessert_data(self) -> List[Dict]:
         """Generate realistic test data for desserts."""
@@ -124,8 +140,10 @@ class DessertAPIUser(HttpUser):
         """
         dessert_data = random.choice(self.test_desserts).copy()
 
-        # Add randomization to make each request unique
-        dessert_data["name"] = f"{dessert_data['name']} #{random.randint(1000, 9999)}"
+        # Add test prefix and randomization to make each request unique
+        dessert_data["name"] = (
+            f"{TEST_DESSERT_PREFIX} {dessert_data['name']} #{random.randint(1000, 9999)}"
+        )
         dessert_data["leftInStock"] = random.randint(1, 50)
 
         headers = {**auth_headers, "Content-Type": "application/json"}
@@ -140,7 +158,8 @@ class DessertAPIUser(HttpUser):
                 try:
                     data = response.json()
                     if "id" in data:
-                        self.created_desserts.append(data["id"])
+                        dessert_id = data["id"]
+                        self.created_desserts.append(dessert_id)
                         response.success()
                     else:
                         response.failure("No ID in response")
@@ -162,7 +181,7 @@ class DessertAPIUser(HttpUser):
         updated_data = random.choice(self.test_desserts).copy()
 
         # Modify data to simulate updates
-        updated_data["name"] = f"Updated {updated_data['name']}"
+        updated_data["name"] = f"{TEST_DESSERT_PREFIX} Updated {updated_data['name']}"
         updated_data["price"] = round(
             updated_data["price"] * random.uniform(0.8, 1.2), 2
         )
@@ -230,6 +249,22 @@ class HighVolumeUser(HttpUser):
 
     wait_time = between(0.1, 0.5)  # Very short wait times for stress testing
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.created_desserts: List[int] = []
+
+    def on_stop(self):
+        """Clean up individual user's desserts when stopping."""
+        if self.created_desserts:
+            print(f"User cleanup: deleting {len(self.created_desserts)} desserts")
+            for dessert_id in self.created_desserts:
+                try:
+                    self.client.delete(
+                        f"/api/desserts/{dessert_id}", headers=auth_headers
+                    )
+                except Exception as e:
+                    print(f"Error cleaning up dessert {dessert_id}: {e}")
+
     @task(10)
     def rapid_list_desserts(self):
         """Rapid-fire dessert listing for stress testing."""
@@ -239,18 +274,29 @@ class HighVolumeUser(HttpUser):
     def quick_create(self):
         """Quick dessert creation."""
         dessert_data = {
-            "name": f"Stress Test Dessert {random.randint(1, 10000)}",
+            "name": f"{TEST_DESSERT_PREFIX} Stress Test Dessert {random.randint(1, 10000)}",
             "price": round(random.uniform(5.0, 15.0), 2),
             "description": "Generated for stress testing",
             "leftInStock": random.randint(1, 100),
         }
 
         headers = {**auth_headers, "Content-Type": "application/json"}
-        self.client.post(
+        with self.client.post(
             "/api/desserts",
             json=dessert_data,
             headers=headers,
-        )
+            catch_response=True,
+        ) as response:
+            assert isinstance(response, ResponseContextManager)
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    if "id" in data:
+                        response.success()
+                except json.JSONDecodeError:
+                    response.failure("Invalid JSON response")
+            else:
+                response.failure(f"HTTP {response.status_code}")
 
 
 # Configuration for different test scenarios
@@ -282,32 +328,3 @@ class TestScenarios:
         Use: locust -f ops/locust_test.py --host=http://localhost:8080 -u 100 -r 10
         """
         return {"users": 100, "spawn_rate": 10, "run_time": "2m"}
-
-
-if __name__ == "__main__":
-    print(
-        """
-    Trifold API Performance Test Suite
-    =================================
-    
-    This script tests the performance of desserts CRUD operations.
-    
-    Basic usage:
-        locust -f ops/locust_test.py --host=http://localhost:8080
-    
-    Test scenarios:
-        Normal Load:  locust -f ops/locust_test.py --host=http://localhost:8080 -u 5 -r 1 -t 5m
-        Stress Test:  locust -f ops/locust_test.py --host=http://localhost:8080 -u 50 -r 5 -t 10m
-        Spike Test:   locust -f ops/locust_test.py --host=http://localhost:8080 -u 100 -r 10 -t 2m
-    
-    Parameters:
-        -u: Number of concurrent users
-        -r: Spawn rate (users per second)
-        -t: Test duration
-        --headless: Run without web UI
-        --csv: Save results to CSV files
-    
-    Example with CSV output:
-        locust -f ops/locust_test.py --host=http://localhost:8080 -u 10 -r 2 -t 3m --headless --csv=results
-    """
-    )
