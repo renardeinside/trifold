@@ -43,9 +43,10 @@ class AppConfig(BaseSettings):
     )
 
     static_assets_path: Path = Field(
-        default=Path(__file__).parent.parent / "ui" / "dist",
+        default=Path(__file__).parent / "static" / "dist",
         description="Path to the static assets directory",
     )
+
     dev_token: SecretStr | None = Field(
         default=None,
         description="Token for local development",

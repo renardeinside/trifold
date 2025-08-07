@@ -37,9 +37,5 @@ format = "v{base}+{commit}.{timestamp}"
 path = "hooks/app_build.py"
 
 [tool.hatch.build]
-exclude = [
-  "src/trifold/ui/node_modules",
-]
-extra_include = [
-  "src/trifold/ui/dist",
-]
+artifacts = ["src/trifold/app/static/dist"]
+exclude = ["src/trifold/ui"]
