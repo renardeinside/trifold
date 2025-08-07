@@ -34,7 +34,9 @@ interface Notification {
 }
 
 function DessertTableContent({ initialData }: { initialData: DessertOut[] }) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "id", desc: false },
+  ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [data, setData] = useState<DessertOut[]>(initialData);

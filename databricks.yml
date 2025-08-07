@@ -11,7 +11,6 @@ artifacts:
     path: .
     build: uv build --wheel
 
-
 resources:
   apps:
     trifold:
@@ -20,6 +19,13 @@ resources:
       source_code_path: ./.build
       config:
         command: ["uvicorn", "trifold.app.app:app", "--workers", "2"]
+
+      # resources:
+      #   - database:
+      #       database_name: databricks_postgres
+      #       instance_name: trifold
+      #       permission: CAN_CONNECT_AND_CREATE
+      #     name: database
 
 targets:
   dev:

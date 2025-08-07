@@ -116,8 +116,9 @@ export const columns: ColumnDef<DessertOut>[] = [
     cell: ({ row }) => {
       const dessert = row.original;
 
-      // Local state to control delete modal visibility
-      const [open, setOpen] = useState(false);
+      // Local state to control delete modal and dropdown visibility
+      const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+      const [dropdownOpen, setDropdownOpen] = useState(false);
 
       const copyId = async () => {
         try {
@@ -128,9 +129,14 @@ export const columns: ColumnDef<DessertOut>[] = [
         }
       };
 
+      const handleDeleteSuccess = () => {
+        setDeleteModalOpen(false);
+        setDropdownOpen(false); // Close dropdown when delete is successful
+      };
+
       return (
         <>
-          <DropdownMenu>
+          <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
                 <span className="sr-only">Open menu</span>
@@ -144,7 +150,7 @@ export const columns: ColumnDef<DessertOut>[] = [
               <DropdownMenuItem
                 onSelect={(e) => {
                   e.preventDefault();
-                  setOpen(true);
+                  setDeleteModalOpen(true);
                 }}
               >
                 <Trash2 className="mr-2 h-4 w-4 text-red-600" /> Delete
@@ -155,8 +161,9 @@ export const columns: ColumnDef<DessertOut>[] = [
           {/* Delete confirmation modal */}
           <DeleteDessertModal
             dessert={dessert}
-            open={open}
-            onOpenChange={setOpen}
+            open={deleteModalOpen}
+            onOpenChange={setDeleteModalOpen}
+            onDeleteSuccess={handleDeleteSuccess}
           />
         </>
       );

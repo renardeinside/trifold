@@ -14,12 +14,14 @@ interface DeleteDessertModalProps {
   dessert: DessertOut;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onDeleteSuccess?: () => void;
 }
 
 export function DeleteDessertModal({
   dessert,
   open,
   onOpenChange,
+  onDeleteSuccess,
 }: DeleteDessertModalProps) {
   const mutation = useDeleteDessert();
   const { refetch } = useDesserts();
@@ -27,8 +29,8 @@ export function DeleteDessertModal({
   const handleDelete = async () => {
     try {
       await mutation.mutateAsync({ dessertId: dessert.id });
-      onOpenChange(false);
       await refetch();
+      onDeleteSuccess?.(); // Call the success callback to close dropdown
     } catch (error) {
       // Error is handled by the store, but we could show a toast here
       console.error("Failed to delete dessert:", error);

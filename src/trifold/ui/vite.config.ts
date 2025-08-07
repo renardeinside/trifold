@@ -24,6 +24,7 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: "../app/static/dist",
     emptyOutDir: true,
     rollupOptions: {
       output: {

@@ -16,3 +16,6 @@ wheels/
 .ruff_cache
 
 .DS_Store
+
+src/trifold/app/static/*
+!src/trifold/app/static/.gitkeep
