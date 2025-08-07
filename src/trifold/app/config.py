@@ -120,7 +120,9 @@ class Runtime(BaseModel):
         self.logger.info("Creating new SQLAlchemy engine (cache expired or first time)")
         return create_engine(
             self.get_connection_info().to_url(),
-            echo=True,
+            # echo=True,
+            pool_size=2,
+            max_overflow=0,
         )
 
     @model_validator(mode="after")

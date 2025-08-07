@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Trifold | Full stack data application on Databricks
  * Trifold is a full stack data application on Databricks
- * OpenAPI spec version: 0.0.0+58ac770.20250805211122
+ * OpenAPI spec version: 0.0.0+3552fce.20250806113526
  */
 import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
@@ -1302,3 +1302,284 @@ export const useDeleteDessert = <
 
   return useMutation(mutationOptions, queryClient);
 };
+
+/**
+ * Server-Sent Events endpoint for real-time dessert updates.
+ * @summary Desserts Events
+ */
+export type dessertsEventsResponse200 = {
+  data: unknown;
+  status: 200;
+};
+
+export type dessertsEventsResponseComposite = dessertsEventsResponse200;
+
+export type dessertsEventsResponse = dessertsEventsResponseComposite & {
+  headers: Headers;
+};
+
+export const getDessertsEventsUrl = () => {
+  return `/api/desserts/events`;
+};
+
+export const dessertsEvents = async (
+  options?: RequestInit,
+): Promise<dessertsEventsResponse> => {
+  const res = await fetch(getDessertsEventsUrl(), {
+    ...options,
+    method: "GET",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+  const data: dessertsEventsResponse["data"] = body ? JSON.parse(body) : {};
+
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as dessertsEventsResponse;
+};
+
+export const getDessertsEventsQueryKey = () => {
+  return [`/api/desserts/events`] as const;
+};
+
+export const getDessertsEventsQueryOptions = <
+  TData = Awaited<ReturnType<typeof dessertsEvents>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof dessertsEvents>>, TError, TData>
+  >;
+  fetch?: RequestInit;
+}) => {
+  const { query: queryOptions, fetch: fetchOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getDessertsEventsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof dessertsEvents>>> = ({
+    signal,
+  }) => dessertsEvents({ signal, ...fetchOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dessertsEvents>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type DessertsEventsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dessertsEvents>>
+>;
+export type DessertsEventsQueryError = unknown;
+
+export function useDessertsEvents<
+  TData = Awaited<ReturnType<typeof dessertsEvents>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof dessertsEvents>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dessertsEvents>>,
+          TError,
+          Awaited<ReturnType<typeof dessertsEvents>>
+        >,
+        "initialData"
+      >;
+    fetch?: RequestInit;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDessertsEvents<
+  TData = Awaited<ReturnType<typeof dessertsEvents>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof dessertsEvents>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dessertsEvents>>,
+          TError,
+          Awaited<ReturnType<typeof dessertsEvents>>
+        >,
+        "initialData"
+      >;
+    fetch?: RequestInit;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDessertsEvents<
+  TData = Awaited<ReturnType<typeof dessertsEvents>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof dessertsEvents>>, TError, TData>
+    >;
+    fetch?: RequestInit;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * @summary Desserts Events
+ */
+
+export function useDessertsEvents<
+  TData = Awaited<ReturnType<typeof dessertsEvents>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof dessertsEvents>>, TError, TData>
+    >;
+    fetch?: RequestInit;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getDessertsEventsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const getDessertsEventsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof dessertsEvents>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<
+      Awaited<ReturnType<typeof dessertsEvents>>,
+      TError,
+      TData
+    >
+  >;
+  fetch?: RequestInit;
+}) => {
+  const { query: queryOptions, fetch: fetchOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getDessertsEventsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof dessertsEvents>>> = ({
+    signal,
+  }) => dessertsEvents({ signal, ...fetchOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof dessertsEvents>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type DessertsEventsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dessertsEvents>>
+>;
+export type DessertsEventsSuspenseQueryError = unknown;
+
+export function useDessertsEventsSuspense<
+  TData = Awaited<ReturnType<typeof dessertsEvents>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof dessertsEvents>>,
+        TError,
+        TData
+      >
+    >;
+    fetch?: RequestInit;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDessertsEventsSuspense<
+  TData = Awaited<ReturnType<typeof dessertsEvents>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof dessertsEvents>>,
+        TError,
+        TData
+      >
+    >;
+    fetch?: RequestInit;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDessertsEventsSuspense<
+  TData = Awaited<ReturnType<typeof dessertsEvents>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof dessertsEvents>>,
+        TError,
+        TData
+      >
+    >;
+    fetch?: RequestInit;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * @summary Desserts Events
+ */
+
+export function useDessertsEventsSuspense<
+  TData = Awaited<ReturnType<typeof dessertsEvents>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof dessertsEvents>>,
+        TError,
+        TData
+      >
+    >;
+    fetch?: RequestInit;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getDessertsEventsSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(
+    queryOptions,
+    queryClient,
+  ) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}

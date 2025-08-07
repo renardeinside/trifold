@@ -1,13 +1,35 @@
 from sqlalchemy import DDL
+from enum import Enum
+from pydantic import BaseModel
+from trifold.app.models import CamelModel, Dessert, DessertOut
 
+NOTIFY_CHANNEL = "desserts_update"
 
 # Define the DDL statements
 notify_function = DDL(
-    """
+    f"""
 CREATE OR REPLACE FUNCTION notify_desserts_update() RETURNS trigger AS $$
+DECLARE
+  payload json;
 BEGIN
-  PERFORM pg_notify('desserts_update', 'changed');
-  RETURN NEW;
+  -- For DELETE operations, use OLD record; for INSERT/UPDATE use NEW record
+  IF TG_OP = 'DELETE' THEN
+    payload = json_build_object(
+      'operation', TG_OP,
+      'table', TG_TABLE_NAME,
+      'data', row_to_json(OLD)
+    );
+    PERFORM pg_notify('{NOTIFY_CHANNEL}', payload::text);
+    RETURN OLD;
+  ELSE
+    payload = json_build_object(
+      'operation', TG_OP,
+      'table', TG_TABLE_NAME,
+      'data', row_to_json(NEW)
+    );
+    PERFORM pg_notify('{NOTIFY_CHANNEL}', payload::text);
+    RETURN NEW;
+  END IF;
 END;
 $$ LANGUAGE plpgsql;
 """
@@ -15,16 +37,29 @@ $$ LANGUAGE plpgsql;
 
 notify_trigger = DDL(
     """
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_trigger WHERE tgname = 'desserts_notify_trigger'
-  ) THEN
-    CREATE TRIGGER desserts_notify_trigger
-    AFTER INSERT OR UPDATE OR DELETE ON dessert
-    FOR EACH ROW EXECUTE FUNCTION notify_desserts_update();
-  END IF;
-END;
-$$;
+CREATE OR REPLACE TRIGGER desserts_notify_trigger
+AFTER INSERT OR UPDATE OR DELETE ON dessert
+FOR EACH ROW EXECUTE FUNCTION notify_desserts_update();
 """
 )
+
+
+class OperationType(str, Enum):
+    INSERT = "INSERT"
+    UPDATE = "UPDATE"
+    DELETE = "DELETE"
+
+
+class NotificationOut(CamelModel):
+    operation: OperationType
+    data: DessertOut
+
+
+class Notification(BaseModel):
+    operation: OperationType
+    data: Dessert
+
+    def to_out(self) -> NotificationOut:
+        return NotificationOut(
+            operation=self.operation, data=DessertOut.from_model(self.data)
+        )

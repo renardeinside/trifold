@@ -7,7 +7,7 @@ import {
   getFilteredRowModel,
   type ColumnFiltersState,
 } from "@tanstack/react-table";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import {
   Table,
@@ -17,22 +17,51 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useDessertsSuspense } from "@/lib/api";
+import { useDessertsSuspense, type DessertOut } from "@/lib/api";
 import { columns } from "@/components/table/columns";
 import { Skeleton } from "@/components/ui/skeleton";
 import FadeIn from "@/components/FadeIn";
 
-function DessertTableContent() {
+enum OperationType {
+  INSERT = "INSERT",
+  UPDATE = "UPDATE",
+  DELETE = "DELETE",
+}
+
+interface Notification {
+  operation: OperationType;
+  data: DessertOut;
+}
+
+function DessertTableContent({ initialData }: { initialData: DessertOut[] }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const { data } = useDessertsSuspense({
-    query: {
-      refetchOnWindowFocus: true,
-      refetchOnMount: true,
-      select: (d) => d.data,
-    },
-  });
+  const [data, setData] = useState<DessertOut[]>(initialData);
+
+  useEffect(() => {
+    const eventSource = new EventSource("/api/desserts/events");
+    eventSource.onmessage = (event) => {
+      // unpack the event data
+      const { operation, data } = JSON.parse(event.data) as Notification;
+      switch (operation) {
+        case OperationType.INSERT:
+          setData((prev) => [...prev, data]);
+          break;
+        case OperationType.UPDATE:
+          setData((prev) => prev.map((d) => (d.id === data.id ? data : d)));
+          break;
+        case OperationType.DELETE:
+          setData((prev) => prev.filter((d) => d.id !== data.id));
+          break;
+      }
+    };
+
+    // Cleanup function to close the EventSource
+    return () => {
+      eventSource.close();
+    };
+  }, []);
 
   const table = useReactTable({
     data,
@@ -141,12 +170,28 @@ function TableSkeleton() {
   );
 }
 
-export function DataTable() {
+function DataTableLoader() {
+  const { data } = useDessertsSuspense({
+    query: {
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      select: (d) => d.data,
+    },
+  });
+
+  return (
+    <FadeIn>
+      <DessertTableContent initialData={data ?? []} />
+    </FadeIn>
+  );
+}
+
+function DataTable() {
   return (
     <Suspense fallback={<TableSkeleton />}>
-      <FadeIn>
-        <DessertTableContent />
-      </FadeIn>
+      <DataTableLoader />
     </Suspense>
   );
 }
+
+export default DataTable;
