@@ -5,7 +5,7 @@ Script to populate the desserts table with sample data.
 from trifold.app.config import rt
 from trifold.app.database import create_db_and_tables
 from trifold.app.models import Dessert
-from sqlmodel import select
+from sqlmodel import select, delete
 import sys
 
 
@@ -56,6 +56,10 @@ def populate_desserts():
     ]
 
     with rt.session() as session:
+        # delete all existing desserts
+        session.execute(delete(Dessert))
+        session.commit()
+
         # Check if desserts already exist to avoid duplicates
         existing_desserts = session.exec(select(Dessert)).all()
         existing_names = {dessert.name for dessert in existing_desserts}

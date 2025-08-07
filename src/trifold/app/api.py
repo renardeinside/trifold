@@ -2,7 +2,7 @@ import asyncio
 from functools import partial
 from typing import AsyncGenerator
 import asyncpg
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from sqlmodel import select
 from fastapi import FastAPI, HTTPException, Request
 from trifold import __version__
@@ -71,7 +71,7 @@ async def update_dessert(dessert_id: int, dessert: DessertIn):
         return DessertOut.from_model(model)
 
 
-@app.delete("/desserts/{dessert_id}", response_model=None, operation_id="DeleteDessert")
+@app.delete("/desserts/{dessert_id}", operation_id="DeleteDessert")
 async def delete_dessert(dessert_id: int):
     with rt.session() as session:
         model = session.get(Dessert, dessert_id)
@@ -79,6 +79,7 @@ async def delete_dessert(dessert_id: int):
             raise HTTPException(status_code=404, detail="Dessert not found")
         session.delete(model)
         session.commit()
+        return JSONResponse(status_code=204, content={})
 
 
 @app.get(

@@ -17,7 +17,22 @@ Example with specific users and spawn rate:
 import random
 import json
 from typing import Dict, List
-from locust import HttpUser, task, between, LocustResponse
+from locust import HttpUser, task, between
+from databricks.sdk import WorkspaceClient
+from locust.clients import ResponseContextManager
+
+
+def get_auth_headers() -> dict[str, str]:
+    """Returns dict of format {'Authorization': 'Bearer <token>'}"""
+    ws = WorkspaceClient()
+    return ws.config.authenticate()
+
+
+try:
+    auth_headers = get_auth_headers()
+except Exception as e:
+    print(f"Error getting auth headers: {e} - using empty headers")
+    auth_headers = {}
 
 
 class DessertAPIUser(HttpUser):
@@ -28,6 +43,7 @@ class DessertAPIUser(HttpUser):
     - Creates desserts that can be later updated/deleted
     - Maintains a local cache of created dessert IDs
     - Uses realistic test data with variations
+    - Uses authenticated requests via Databricks SDK
     """
 
     wait_time = between(1, 3)  # Wait 1-3 seconds between tasks
@@ -84,8 +100,10 @@ class DessertAPIUser(HttpUser):
         Test GET /api/desserts endpoint.
         This is weighted higher (3) as listing is typically the most common operation.
         """
-        with self.client.get("/api/desserts", catch_response=True) as response:
-            assert isinstance(response, LocustResponse)
+        with self.client.get(
+            "/api/desserts", headers=auth_headers, catch_response=True
+        ) as response:
+            assert isinstance(response, ResponseContextManager)
             if response.status_code == 200:
                 try:
                     data = response.json()
@@ -110,12 +128,14 @@ class DessertAPIUser(HttpUser):
         dessert_data["name"] = f"{dessert_data['name']} #{random.randint(1000, 9999)}"
         dessert_data["leftInStock"] = random.randint(1, 50)
 
+        headers = {**auth_headers, "Content-Type": "application/json"}
         with self.client.post(
             "/api/desserts",
             json=dessert_data,
-            headers={"Content-Type": "application/json"},
+            headers=headers,
             catch_response=True,
         ) as response:
+            assert isinstance(response, ResponseContextManager)
             if response.status_code == 200:
                 try:
                     data = response.json()
@@ -148,12 +168,15 @@ class DessertAPIUser(HttpUser):
         )
         updated_data["leftInStock"] = random.randint(0, 100)
 
+        headers = {**auth_headers, "Content-Type": "application/json"}
         with self.client.put(
             f"/api/desserts/{dessert_id}",
             json=updated_data,
-            headers={"Content-Type": "application/json"},
+            headers=headers,
             catch_response=True,
+            name="/api/desserts/{id}",  # Group all PUT requests under this name
         ) as response:
+            assert isinstance(response, ResponseContextManager)
             if response.status_code == 200:
                 try:
                     data = response.json()
@@ -184,9 +207,12 @@ class DessertAPIUser(HttpUser):
             random.randint(0, len(self.created_desserts) - 1)
         )
         with self.client.delete(
-            f"/api/desserts/{dessert_id}", catch_response=True
+            f"/api/desserts/{dessert_id}",
+            headers=auth_headers,
+            catch_response=True,
+            name="/api/desserts/{id}",  # Group all DELETE requests under this name
         ) as response:
-            assert isinstance(response, LocustResponse)
+            assert isinstance(response, ResponseContextManager)
             if response.status_code == 204:
                 response.success()
             elif response.status_code == 404:
@@ -199,6 +225,7 @@ class HighVolumeUser(HttpUser):
     """
     A more aggressive user for stress testing.
     This user focuses on high-frequency read operations with occasional writes.
+    Uses authenticated requests via Databricks SDK.
     """
 
     wait_time = between(0.1, 0.5)  # Very short wait times for stress testing
@@ -206,7 +233,7 @@ class HighVolumeUser(HttpUser):
     @task(10)
     def rapid_list_desserts(self):
         """Rapid-fire dessert listing for stress testing."""
-        self.client.get("/api/desserts")
+        self.client.get("/api/desserts", headers=auth_headers)
 
     @task(1)
     def quick_create(self):
@@ -218,10 +245,11 @@ class HighVolumeUser(HttpUser):
             "leftInStock": random.randint(1, 100),
         }
 
+        headers = {**auth_headers, "Content-Type": "application/json"}
         self.client.post(
             "/api/desserts",
             json=dessert_data,
-            headers={"Content-Type": "application/json"},
+            headers=headers,
         )
 
 
@@ -257,7 +285,8 @@ class TestScenarios:
 
 
 if __name__ == "__main__":
-    print("""
+    print(
+        """
     Trifold API Performance Test Suite
     =================================
     
@@ -280,4 +309,5 @@ if __name__ == "__main__":
     
     Example with CSV output:
         locust -f ops/locust_test.py --host=http://localhost:8080 -u 10 -r 2 -t 3m --headless --csv=results
-    """)
+    """
+    )
