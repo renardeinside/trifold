@@ -4,8 +4,7 @@ from typing import AsyncGenerator
 import asyncpg
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
-from databricks.sdk import WorkspaceClient
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request
 from trifold import __version__
 from trifold.app.config import rt
 from trifold.app.dependencies import get_user_workspace_client
@@ -34,8 +33,13 @@ async def version():
 
 
 @app.get("/profile", response_model=ProfileView, operation_id="Profile")
-async def profile(ws: WorkspaceClient = Depends(get_user_workspace_client)):
-    return ProfileView.from_ws(ws)
+async def profile(request: Request):
+    try:
+        ws = get_user_workspace_client(request)
+        return ProfileView.from_ws(ws)
+    except Exception as e:
+        rt.logger.error(f"Error getting user workspace client: {e}")
+        return ProfileView.from_request(request)
 
 
 @app.get("/desserts", response_model=list[DessertOut], operation_id="Desserts")

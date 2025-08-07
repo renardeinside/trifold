@@ -25,5 +25,5 @@ def get_user_workspace_client(
 
     rt.logger.info("Received OBO token, initializing client with it")
     return WorkspaceClient(
-        token=token,
+        token=token, auth_type="pat"
     )  # set pat explicitly to avoid issues with SP client

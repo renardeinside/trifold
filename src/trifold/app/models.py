@@ -4,6 +4,7 @@ from functools import lru_cache
 
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service import iam
+from fastapi import Request
 from trifold import __version__
 
 from pydantic import BaseModel, ConfigDict
@@ -37,6 +38,16 @@ class ProfileView(CamelModel):
     @classmethod
     def from_ws(cls, ws: WorkspaceClient) -> "ProfileView":
         return cls(user=ws.current_user.me())
+
+    @classmethod
+    def from_request(cls, request: Request) -> "ProfileView":
+        # make user from request headers, all other fields are None
+        return cls(
+            user=iam.User(
+                user_name=request.headers.get("X-Forwarded-Email"),
+                display_name=request.headers.get("X-Forwarded-Preferred-Username"),
+            )
+        )
 
 
 class DessertIn(CamelModel):
