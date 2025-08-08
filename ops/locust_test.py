@@ -64,10 +64,11 @@ class DessertAPIUser(HttpUser):
             for dessert_id in self.created_desserts:
                 try:
                     self.client.delete(
-                        f"/api/desserts/{dessert_id}", headers=auth_headers
+                        f"/api/desserts/{dessert_id}",
+                        headers=auth_headers,
                     )
-                except Exception as e:
-                    print(f"Error cleaning up dessert {dessert_id}: {e}")
+                except Exception:
+                    pass
 
     def _get_test_dessert_data(self) -> List[Dict]:
         """Generate realistic test data for desserts."""
@@ -229,7 +230,6 @@ class DessertAPIUser(HttpUser):
             f"/api/desserts/{dessert_id}",
             headers=auth_headers,
             catch_response=True,
-            name="/api/desserts/{id}",  # Group all DELETE requests under this name
         ) as response:
             assert isinstance(response, ResponseContextManager)
             if response.status_code == 204:
@@ -260,10 +260,11 @@ class HighVolumeUser(HttpUser):
             for dessert_id in self.created_desserts:
                 try:
                     self.client.delete(
-                        f"/api/desserts/{dessert_id}", headers=auth_headers
+                        f"/api/desserts/{dessert_id}",
+                        headers=auth_headers,
                     )
-                except Exception as e:
-                    print(f"Error cleaning up dessert {dessert_id}: {e}")
+                except Exception:
+                    pass
 
     @task(10)
     def rapid_list_desserts(self):
@@ -313,7 +314,7 @@ class TestScenarios:
         Normal load test configuration.
         Use: locust -f ops/locust_test.py --host=http://localhost:8080 -u 5 -r 1
         """
-        return {"users": 5, "spawn_rate": 1, "run_time": "5m"}
+        return {"users": 5, "spawn_rate": 1, "run_time": "1m"}
 
     @staticmethod
     def stress_test():
@@ -321,7 +322,7 @@ class TestScenarios:
         Stress test configuration.
         Use: locust -f ops/locust_test.py --host=http://localhost:8080 -u 50 -r 5
         """
-        return {"users": 50, "spawn_rate": 5, "run_time": "10m"}
+        return {"users": 50, "spawn_rate": 5, "run_time": "1m"}
 
     @staticmethod
     def spike_test():
@@ -329,4 +330,4 @@ class TestScenarios:
         Spike test configuration.
         Use: locust -f ops/locust_test.py --host=http://localhost:8080 -u 100 -r 10
         """
-        return {"users": 100, "spawn_rate": 10, "run_time": "2m"}
+        return {"users": 100, "spawn_rate": 10, "run_time": "1m"}

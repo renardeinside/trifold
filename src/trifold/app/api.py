@@ -2,9 +2,9 @@ import asyncio
 from functools import partial
 from typing import AsyncGenerator
 import asyncpg
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
 from sqlmodel import select
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response, status
 from trifold import __version__
 from trifold.app.config import rt
 from trifold.app.dependencies import get_user_workspace_client
@@ -71,7 +71,12 @@ async def update_dessert(dessert_id: int, dessert: DessertIn):
         return DessertOut.from_model(model)
 
 
-@app.delete("/desserts/{dessert_id}", operation_id="DeleteDessert")
+@app.delete(
+    "/desserts/{dessert_id}",
+    operation_id="DeleteDessert",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+)
 async def delete_dessert(dessert_id: int):
     with rt.session() as session:
         model = session.get(Dessert, dessert_id)
@@ -79,7 +84,7 @@ async def delete_dessert(dessert_id: int):
             raise HTTPException(status_code=404, detail="Dessert not found")
         session.delete(model)
         session.commit()
-        return JSONResponse(status_code=204, content={})
+        return None
 
 
 @app.get(

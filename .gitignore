@@ -19,3 +19,6 @@ wheels/
 
 src/trifold/app/static/*
 !src/trifold/app/static/.gitkeep
+
+# load testing reports
+reports/
