@@ -292,6 +292,8 @@ class HighVolumeUser(HttpUser):
                 try:
                     data = response.json()
                     if "id" in data:
+                        dessert_id = data["id"]
+                        self.created_desserts.append(dessert_id)
                         response.success()
                 except json.JSONDecodeError:
                     response.failure("Invalid JSON response")
