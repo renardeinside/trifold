@@ -50,7 +50,7 @@ class DessertAPIUser(HttpUser):
     - Uses authenticated requests via Databricks SDK
     """
 
-    wait_time = between(1, 3)  # Wait 1-3 seconds between tasks
+    wait_time = between(0.01, 0.2)
 
     def on_start(self):
         """Initialize user state when starting."""
@@ -60,12 +60,12 @@ class DessertAPIUser(HttpUser):
     def on_stop(self):
         """Clean up individual user's desserts when stopping."""
         if self.created_desserts:
-            print(f"User cleanup: deleting {len(self.created_desserts)} desserts")
             for dessert_id in self.created_desserts:
                 try:
                     self.client.delete(
                         f"/api/desserts/{dessert_id}",
                         headers=auth_headers,
+                        name="/api/desserts/{id}",
                     )
                 except Exception:
                     pass
@@ -230,74 +230,13 @@ class DessertAPIUser(HttpUser):
             f"/api/desserts/{dessert_id}",
             headers=auth_headers,
             catch_response=True,
+            name="/api/desserts/{id}",
         ) as response:
             assert isinstance(response, ResponseContextManager)
             if response.status_code == 204:
                 response.success()
             elif response.status_code == 404:
                 response.failure("Dessert not found")
-            else:
-                response.failure(f"HTTP {response.status_code}")
-
-
-class HighVolumeUser(HttpUser):
-    """
-    A more aggressive user for stress testing.
-    This user focuses on high-frequency read operations with occasional writes.
-    Uses authenticated requests via Databricks SDK.
-    """
-
-    wait_time = between(0.1, 0.5)  # Very short wait times for stress testing
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.created_desserts: List[int] = []
-
-    def on_stop(self):
-        """Clean up individual user's desserts when stopping."""
-        if self.created_desserts:
-            print(f"User cleanup: deleting {len(self.created_desserts)} desserts")
-            for dessert_id in self.created_desserts:
-                try:
-                    self.client.delete(
-                        f"/api/desserts/{dessert_id}",
-                        headers=auth_headers,
-                    )
-                except Exception:
-                    pass
-
-    @task(10)
-    def rapid_list_desserts(self):
-        """Rapid-fire dessert listing for stress testing."""
-        self.client.get("/api/desserts", headers=auth_headers)
-
-    @task(1)
-    def quick_create(self):
-        """Quick dessert creation."""
-        dessert_data = {
-            "name": f"{TEST_DESSERT_PREFIX} Stress Test Dessert {random.randint(1, 10000)}",
-            "price": round(random.uniform(5.0, 15.0), 2),
-            "description": "Generated for stress testing",
-            "leftInStock": random.randint(1, 100),
-        }
-
-        headers = {**auth_headers, "Content-Type": "application/json"}
-        with self.client.post(
-            "/api/desserts",
-            json=dessert_data,
-            headers=headers,
-            catch_response=True,
-        ) as response:
-            assert isinstance(response, ResponseContextManager)
-            if response.status_code == 200:
-                try:
-                    data = response.json()
-                    if "id" in data:
-                        dessert_id = data["id"]
-                        self.created_desserts.append(dessert_id)
-                        response.success()
-                except json.JSONDecodeError:
-                    response.failure("Invalid JSON response")
             else:
                 response.failure(f"HTTP {response.status_code}")
 
