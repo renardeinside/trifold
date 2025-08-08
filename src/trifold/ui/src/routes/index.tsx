@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { version } from "@/lib/api";
 import { Table } from "lucide-react";
 import FadeIn from "@/components/FadeIn";
+import { VersionBadge } from "@/components/VersionBadge";
 
 export const Route = createFileRoute("/")({
   preload: true,
@@ -26,11 +27,7 @@ function Landing() {
       </div>
 
       {/* Version badge in bottom right corner */}
-      <div className="absolute bottom-1 left-1 z-20 font-mono text-xs">
-        <span className="text-accent-foreground/50">
-          App version: {version}
-        </span>
-      </div>
+      <VersionBadge version={version} />
 
       <div className="flex flex-col items-center gap-8">
         <FadeIn>
