@@ -1,6 +1,6 @@
 # 🔷 Trifold
 
-A full-stack sample application built with FastAPI, React, and Databricks integration.
+A full-stack real-time table editor built with FastAPI, React, Databricks Apps and Lakebase.
 
 ## 🏗 Architecture Overview
 
@@ -69,6 +69,34 @@ yarn --cwd src/trifold/ui orval
 uvicorn trifold.app.app:app --reload
 ```
 
+To populate the database with some data, run:
+```bash
+python ops/populate_db.py
+```
+
+For load testing, run:
+```bash
+DATABRICKS_CONFIG_PROFILE=<your-profile> locust -f ops/locust_test.py --host=<your-app-url>
+```
+
+#### 📦 Deployment
+
+1. Create a new Lakebase instance:
+```
+databricks database create-database-instance --capacity CU_1 trifold -p <your-profile>
+```
+
+2. Deploy the app to Databricks:
+```
+databricks bundle deploy -p <your-profile>
+```
+
+3. Grant the app service principal access to the Lakebase instance in the Databricks UI.
+4. Start the app:
+```
+databricks bundle run trifold -p <your-profile>
+```
+
 ## 📁 Project Structure
 
 ```
@@ -115,3 +143,8 @@ Components follow a consistent pattern:
 - Follow consistent naming conventions
 - Ensure proper error handling
 - Use type-safe data access patterns
+
+
+## Sources
+
+Project icon is from taken from [svgrepo.com](https://www.svgrepo.com/svg/17314/triangle) and slightly modified, original icon is CC0 licensed.
