@@ -111,7 +111,7 @@ class DessertAPIUser(HttpUser):
             },
         ]
 
-    @task(3)
+    @task(2)
     def list_desserts(self):
         """
         Test GET /api/desserts endpoint.
@@ -133,7 +133,7 @@ class DessertAPIUser(HttpUser):
             else:
                 response.failure(f"HTTP {response.status_code}")
 
-    @task(2)
+    @task(1)
     def create_dessert(self):
         """
         Test POST /api/desserts endpoint.
@@ -169,7 +169,7 @@ class DessertAPIUser(HttpUser):
             else:
                 response.failure(f"HTTP {response.status_code}")
 
-    @task(1)
+    @task(2)
     def update_dessert(self):
         """
         Test PUT /api/desserts/{id} endpoint.
